@@ -12,6 +12,10 @@ if (exists) {
 } else {
 	console.log("no dice!");
 }
+var os = require('os');
+console.log(os.release().split('.')[0]);
+
+
 
 var db = new sqlite3.Database(file);
 // Create a screen object.
@@ -23,7 +27,10 @@ var ID_MISMATCH = false;
 var SELECTED_CHATTER = "";
 var MY_APPLE_ID = "";
 var sending = false;
-
+var OLD_OSX = false;
+if (os.release().split('.')[0] === "12") {
+	OLD_OSX = true;
+}
 // blessed code
 var chatList = blessed.list({
 	parent: screen,
@@ -173,11 +180,15 @@ chatList.on('select', function(data) {
 
 screen.render();
 
-
 function getAllMessages() {
 	db.serialize(function() {
 		var arr = [];
-		db.all("SELECT message.ROWID, chat.display_name, handle.id, message.text, message.is_from_me, message.date, message.date_delivered, message.date_read FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.service = 'iMessage' ORDER BY message.date DESC", function(err, rows) {
+		var SQL = "SELECT message.ROWID, chat.display_name, handle.id, message.text, message.is_from_me, message.date, message.date_delivered, message.date_read FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.service = 'iMessage' ORDER BY message.date DESC";
+		if (OLD_OSX) {
+			SQL = "SELECT message.ROWID, handle.id, message.text, message.is_from_me, message.date, message.date_delivered, message.date_read FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.service = 'iMessage' ORDER BY message.date DESC";
+		}
+
+		db.all(SQL, function(err, rows) {
 			for (var i = 0; i < rows.length; i++) {
 				var row = rows[i];
 				arr.push({ 'id': row.ROWID, 'chat_display_name': row.display_name, 'handle_id': row.id, "text": row.text, "is_from_me": row.is_from_me, "date": row.date, "date_delivered": row.date_delivered, "date_read": row.date_read });
@@ -185,22 +196,6 @@ function getAllMessages() {
 			}
 			ID_MISMATCH = false;
 
-			return arr;
-		});
-	});
-}
-
-function allMessagesAfter(id) {
-	db.serialize(function() {
-		var arr = [];
-		db.all("SELECT message.ROWID, chat.display_name, handle.id, message.text, message.is_from_me, message.date, message.date_delivered, message.date_read FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.service = 'iMessage' AND message.ROWID > "+id+" ORDER BY message.date DESC", function(err, rows) {
-			if (err) throw err;
-			for (var i = 0; i < rows.length; i++) {
-				var row = rows[i];
-				arr.push({ 'id': row.ROWID, 'chat_display_name': row.display_name, 'handle_id': row.id, "text": row.text, "is_from_me": row.is_from_me, "date": row.date, "date_delivered": row.date_delivered, "date_read": row.date_read });
-				LAST_SEEN_ID = row.ROWID;
-			}
-			ID_MISMATCH = false;
 			return arr;
 		});
 	});
@@ -209,7 +204,11 @@ function allMessagesAfter(id) {
 function getChats() {
 	db.serialize(function() {
 		var arr = [];
-		db.all("SELECT DISTINCT message.date, handle.id, chat.chat_identifier, chat.display_name  FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.is_from_me = 0 AND message.service = 'iMessage' ORDER BY message.date DESC", function(err, rows) {
+		var SQL = "SELECT DISTINCT message.date, handle.id, chat.chat_identifier, chat.display_name  FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.is_from_me = 0 AND message.service = 'iMessage' ORDER BY message.date DESC";
+		if (OLD_OSX) {
+			SQL = "SELECT DISTINCT message.date, handle.id, chat.chat_identifier FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.is_from_me = 0 AND message.service = 'iMessage' ORDER BY message.date DESC";
+		}
+		db.all(SQL, function(err, rows) {
 			if (err) throw err;
 			for (var i = 0; i < rows.length; i++) {
 				var row = rows[i];
@@ -219,7 +218,7 @@ function getChats() {
 					}
 				} else if (arr.indexOf(row.chat_identifier) < 0 && arr.indexOf(row.display_name+'-'+row.chat_identifier) < 0) {
 					if (row.chat_identifier.indexOf('chat') > -1) {
-						if (row.display_name && row.display_name !== "" && typeof(row.display_name) !== "undefined") {
+						if (row.display_name && row.display_name !== "" && typeof(row.display_name) !== "undefined" || OLD_OSX) {
 							arr.push(row.display_name+'-'+row.chat_identifier);
 						}
 
@@ -263,40 +262,6 @@ function getAllMessagesInCurrentChat() {
 			screen.render();
 		});
 	});
-}
-
-function getNewMessagesInCurrentChat() {
-	var SQL = "";
-	if (SELECTED_CHATTER.indexOf('chat') > -1) { // this is a group chat
-		SQL = "SELECT DISTINCT message.ROWID, handle.id, message.text, message.is_from_me, message.date, message.date_delivered, message.date_read FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.service = 'iMessage' AND chat.chat_identifier = '"+SELECTED_CHATTER+"'  AND message.ROWID > "+LAST_SEEN_CHAT_ID+" ORDER BY message.date DESC LIMIT 500";
-	} else { // this is one person
-		SQL = "SELECT DISTINCT message.ROWID, handle.id, message.text, message.is_from_me, message.date, message.date_delivered, message.date_read FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.service = 'iMessage' AND handle.id = '"+SELECTED_CHATTER+"' AND message.ROWID > "+LAST_SEEN_CHAT_ID+" ORDER BY message.date DESC LIMIT 500";
-	}
-
-	db.serialize(function() {
-		var arr = [];
-		db.all(SQL, function(err, rows) {
-			if (err) throw err;
-			for (var i = 0; i < rows.length; i++) {
-				var row = rows[i];
-				LAST_SEEN_CHAT_ID = row.ROWID;
-				arr.push(((!row.is_from_me) ? row.id : "me") + ": " + row.text);
-
-			}
-			outputBox.setItems(arr.reverse());
-			outputBox.select(rows.length);
-
-			screen.render();
-		});
-	});
-}
-
-function hasNewMessages() {
-	if (ID_MISMATCH) {
-		return true;
-	}
-
-	return false;
 }
 
 function sendMessage(to, message) {
