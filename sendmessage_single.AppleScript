@@ -2,6 +2,7 @@ on run argv
 	-- no activate
 	tell application "System Events"
 		tell process "Messages"
+			keystroke return
 			tell menu item "New Message" of menu "file" of menu bar 1
 				click
 			end tell
