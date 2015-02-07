@@ -7,6 +7,7 @@
 - Apple iMessages account signed in to Messages.app
 
 ## How to run on your Mac:
+Firstly, at the very minimum, you will have to enable assistive access to Terminal.app or iTerm2. If you want to run this over ssh, you will also need to enable access to sshd-keygen-wrapper. Next:
 > git clone https://github.com/CamHenlin/imessageclient.git
 >
 > cd imessageclient
@@ -20,6 +21,8 @@
 - Once you are ready to send your message, press the enter key. You should see the Messages app flash for a moment and send your message and then you should see it appear in the terminal.
 - In the text entry field, if you press tab, you will be brought back to the conversation selection list so you can select another conversation.
 - When you are selecting conversation, you can press the Q key to quit
+
+
 
 ## This is clunky!
 It seems to me that there is a way to access private APIs within OS X to send messages without the use of Messages.app, but I haven't figured out how to do so yet. Maybe you can help out and contribute?
