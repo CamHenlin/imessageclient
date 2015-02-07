@@ -77,7 +77,7 @@ var outputBox = blessed.list({
 	// Possibly support:
 	// align: 'center',
 	fg: 'blue',
-	height: '85%',
+	height: '80%',
 	border: {
 		type: 'line'
 	},
