@@ -16,7 +16,7 @@ if (exists) {
 var db = new sqlite3.Database(file);
 // Create a screen object.
 var screen = blessed.screen();
-
+screen.title = 'iMessages';
 var LAST_SEEN_ID = 0;
 var LAST_SEEN_CHAT_ID = 0;
 var ID_MISMATCH = false;
@@ -305,21 +305,13 @@ function sendMessage(to, message) {
 				throw err;
 			}
 
-			setTimeout(function() {
-				getNewMessagesInCurrentChat();
-			}, 1000);
-
 			screen.render();
 		});
 	} else {
-		applescript.execFile(__dirname+'/sendmessage.AppleScript', [[to], message], function(err, result) {
+		applescript.execFile(__dirname+'/sendmessage_single.AppleScript', [[to], message], function(err, result) {
 			if (err) {
 				throw err;
 			}
-
-			setTimeout(function() {
-				getNewMessagesInCurrentChat();
-			}, 1000);
 
 			screen.render();
 		});
@@ -338,7 +330,7 @@ setInterval(function() {
 					var ID_MISMATCH = true;
 					// beep();
 					getChats();
-					getNewMessagesInCurrentChat();
+					getAllMessagesInCurrentChat();
 				}
 			}
 		}.bind(this));
