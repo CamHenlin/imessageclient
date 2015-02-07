@@ -22,6 +22,7 @@ var LAST_SEEN_CHAT_ID = 0;
 var ID_MISMATCH = false;
 var SELECTED_CHATTER = "";
 var MY_APPLE_ID = "";
+var sending = false;
 
 // blessed code
 var chatList = blessed.list({
@@ -77,7 +78,7 @@ var outputBox = blessed.list({
 	// Possibly support:
 	// align: 'center',
 	fg: 'blue',
-	height: '80%',
+	height: '85%',
 	border: {
 		type: 'line'
 	},
@@ -299,6 +300,9 @@ function hasNewMessages() {
 }
 
 function sendMessage(to, message) {
+	if (sending) { return; }
+	sending = true;
+
 	if (to.indexOf('chat') > -1) {
 		applescript.execFile(__dirname+'/sendmessage.AppleScript', [[to.split('-chat')[0]], message], function(err, result) {
 			if (err) {
@@ -306,7 +310,8 @@ function sendMessage(to, message) {
 			}
 
 			screen.render();
-		});
+			sending = false;
+		}.bind(this));
 	} else {
 		applescript.execFile(__dirname+'/sendmessage_single.AppleScript', [[to], message], function(err, result) {
 			if (err) {
@@ -314,7 +319,8 @@ function sendMessage(to, message) {
 			}
 
 			screen.render();
-		});
+			sending = false;
+		}.bind(this));
 	}
 
 }
