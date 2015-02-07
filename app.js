@@ -32,6 +32,7 @@ var chatList = blessed.list({
 	right: '0',
 	align: 'center',
 	fg: 'blue',
+	label: 'Conversations',
 	border: {
 		type: 'line'
 	},
@@ -61,7 +62,8 @@ var inputBox = blessed.textarea({
 	// Possibly support:
 	// align: 'center',
 	fg: 'blue',
-	height: '10%',
+	height: '15%',
+	label: 'iMessage',
 	border: {
 		type: 'line'
 	},
@@ -158,8 +160,8 @@ inputBox.on('submit', function() {
 });
 
 chatList.on('select', function(data) {
-	selectedChatBox.setContent(chatList.getItem(data.index-1).content);
-	SELECTED_CHATTER = chatList.getItem(data.index-1).content;
+	selectedChatBox.setContent(chatList.getItem(data.index-2).content);
+	SELECTED_CHATTER = chatList.getItem(data.index-2).content;
 	if (SELECTED_CHATTER.indexOf('-chat') > -1) {
 		SELECTED_CHATTER = 'chat'+SELECTED_CHATTER.split('-chat')[1];
 		// console.log(SELECTED_CHATTER);
@@ -211,17 +213,19 @@ function getChats() {
 			for (var i = 0; i < rows.length; i++) {
 				var row = rows[i];
 				if (row.chat_identifier === null) {
-					if (arr.indexOf(row.id) < 0) {
+					if (arr.indexOf(row.id) < 0 && row.id !== "" && typeof(row.id) !== "undefined") {
 						arr.push(row.id);
 					}
 				} else if (arr.indexOf(row.chat_identifier) < 0 && arr.indexOf(row.display_name+'-'+row.chat_identifier) < 0) {
 					if (row.chat_identifier.indexOf('chat') > -1) {
-						if (row.display_name) {
+						if (row.display_name && row.display_name !== "" && typeof(row.display_name) !== "undefined") {
 							arr.push(row.display_name+'-'+row.chat_identifier);
 						}
 
 					} else {
-						arr.push(row.chat_identifier);
+						if (row.chat_identifier && row.chat_identifier !== "" && typeof(row.chat_identifier) !== "undefined") {
+							arr.push(row.chat_identifier);
+						}
 					}
 
 				}
@@ -332,7 +336,7 @@ setInterval(function() {
 					LAST_SEEN_ID = max;
 					// console.log('new message! update clients!');
 					var ID_MISMATCH = true;
-					beep();
+					// beep();
 					getChats();
 					getNewMessagesInCurrentChat();
 				}
