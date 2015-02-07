@@ -1,6 +1,6 @@
 # terminal-based iMessage client for Mac OS X
 
-#### future home of a screenshot
+![iMessage client screenshot](https://github.com/CamHenlin/imessageclient/raw/master/screenshot.png "screenshot of the iMessage client in action")
 
 ## requirements:
 - nodejs
