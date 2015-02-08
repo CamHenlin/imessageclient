@@ -12,6 +12,9 @@ on run argv
 			keystroke return
 			delay 0.1
 			keystroke tab
+			if item 3 of argv = "true" then -- extra tab for "full keyboard access"
+				keystroke tab
+			end if
 			keystroke item 2 of argv
 			delay 0.1
 			keystroke return

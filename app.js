@@ -4,7 +4,8 @@ var dir = process.env.HOME + '/Library/Messages/';
 var file = process.env.HOME + '/Library/Messages/chat.db';
 var blessed = require("blessed");
 var beep = require('beepbeep');
-var applescript = require("applescript");
+var applescript = require("./applescript/lib/applescript.js");
+var exec = require('exec');
 
 var exists = fs.existsSync(file);
 if (exists) {
@@ -12,25 +13,45 @@ if (exists) {
 } else {
 	console.log("no dice!");
 }
+
+// discover if we are running and old version of OS X or not
+var OLD_OSX = false;
 var os = require('os');
-console.log(os.release().split('.')[0]);
+if (os.release().split('.')[0] === "12") { // 12 is 10.8 Mountain Lion, which does not have named group chats
+	OLD_OSX = true;
+}
 
+// discover whether the keyboard setting "Full Keyboard Access" is set to
+// "Text boxes and lists only" -- error or 1 or less
+// "All controls" (takes 2 tabs instead of one switching between elements in Messages.app) -- 2 or more
+var FULL_KEYBOARD_ACCESS = false; // false for text boxes and lists, true for all controls
+exec('defaults read NSGlobalDomain AppleKeyboardUIMode', function(err, out, code) {
+	if (err instanceof Error) {
+		// return because we already have false set and error means text boxes and lists only
+		return;
+	}
 
+	if (parseInt(out) > 1) {
+		FULL_KEYBOARD_ACCESS = true;
+	}
+});
 
+// read the Messages.app sqlite db
 var db = new sqlite3.Database(file);
-// Create a screen object.
+
+// Create a screen object and name it.
 var screen = blessed.screen();
 screen.title = 'iMessages';
+
+// internally used variables
 var LAST_SEEN_ID = 0;
 var LAST_SEEN_CHAT_ID = 0;
 var ID_MISMATCH = false;
 var SELECTED_CHATTER = "";
 var MY_APPLE_ID = "";
 var sending = false;
-var OLD_OSX = false;
-if (os.release().split('.')[0] === "12") {
-	OLD_OSX = true;
-}
+
+
 // blessed code
 var chatList = blessed.list({
 	parent: screen,
@@ -85,7 +106,7 @@ var outputBox = blessed.list({
 	// Possibly support:
 	// align: 'center',
 	fg: 'blue',
-	height: '85%',
+	height: '82%',
 	border: {
 		type: 'line'
 	},
@@ -100,8 +121,8 @@ var outputBox = blessed.list({
 	keys: true
 });
 
+// load initial chats list
 getChats();
-
 
 // Allow scrolling with the mousewheel (manually).
 
@@ -148,6 +169,49 @@ screen.key('.', function(ch, key) {
 	screen.render();
 });
 
+screen.key('n', function(ch, key) {
+	var newChatBox = blessed.textarea({
+		parent: screen,
+		// Possibly support:
+		// align: 'center',
+		fg: 'blue',
+		height: '15%',
+		border: {
+			type: 'line'
+		},
+		width: '75%',
+		top: '35%',
+		left: '12.5%',
+		label: "New Conversation - type in contact iMessage info and hit enter"
+	});
+
+	newChatBox.on('focus', function() {
+		newChatBox.readInput(function(data) {});
+
+		newChatBox.key('enter', function(ch, key) {
+			var sendTo = newChatBox.getValue();
+			newChatBox.detach();
+			inputBox.focus();
+			selectedChatBox.setContent(sendTo);
+			SELECTED_CHATTER = sendTo;
+			screen.render();
+		});
+
+		newChatBox.key('esc', function(ch, key) {
+			newChatBox.detach();
+			chatList.focus();
+			screen.render();
+		});
+
+		newChatBox.key('tab', function(ch, key) {
+
+		});
+	});
+	newChatBox.focus();
+
+	screen.render();
+})
+
 inputBox.on('focus', function() {
 	inputBox.readInput(function(data) {});
 
@@ -163,43 +227,17 @@ inputBox.on('focus', function() {
 	});
 });
 
-inputBox.on('submit', function() {
-	//console.log(inputBox.getValue());
-});
-
 chatList.on('select', function(data) {
 	selectedChatBox.setContent(chatList.getItem(data.index-2).content);
 	SELECTED_CHATTER = chatList.getItem(data.index-2).content;
+
+	// handle special case for chats:
 	if (SELECTED_CHATTER.indexOf('-chat') > -1) {
 		SELECTED_CHATTER = 'chat'+SELECTED_CHATTER.split('-chat')[1];
-		// console.log(SELECTED_CHATTER);
 	}
 	getAllMessagesInCurrentChat();
 	screen.render();
 });
-
-screen.render();
-
-function getAllMessages() {
-	db.serialize(function() {
-		var arr = [];
-		var SQL = "SELECT message.ROWID, chat.display_name, handle.id, message.text, message.is_from_me, message.date, message.date_delivered, message.date_read FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.service = 'iMessage' ORDER BY message.date DESC";
-		if (OLD_OSX) {
-			SQL = "SELECT message.ROWID, handle.id, message.text, message.is_from_me, message.date, message.date_delivered, message.date_read FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.service = 'iMessage' ORDER BY message.date DESC";
-		}
-
-		db.all(SQL, function(err, rows) {
-			for (var i = 0; i < rows.length; i++) {
-				var row = rows[i];
-				arr.push({ 'id': row.ROWID, 'chat_display_name': row.display_name, 'handle_id': row.id, "text": row.text, "is_from_me": row.is_from_me, "date": row.date, "date_delivered": row.date_delivered, "date_read": row.date_read });
-				LAST_SEEN_ID = row.ROWID;
-			}
-			ID_MISMATCH = false;
-
-			return arr;
-		});
-	});
-}
 
 function getChats() {
 	db.serialize(function() {
@@ -269,7 +307,7 @@ function sendMessage(to, message) {
 	sending = true;
 
 	if (to.indexOf('chat') > -1) {
-		applescript.execFile(__dirname+'/sendmessage.AppleScript', [[to.split('-chat')[0]], message], function(err, result) {
+		applescript.execFile(__dirname+'/sendmessage.AppleScript', [[to.split('-chat')[0]], message, FULL_KEYBOARD_ACCESS], function(err, result) {
 			if (err) {
 				throw err;
 			}
@@ -278,7 +316,7 @@ function sendMessage(to, message) {
 			sending = false;
 		}.bind(this));
 	} else {
-		applescript.execFile(__dirname+'/sendmessage_single.AppleScript', [[to], message], function(err, result) {
+		applescript.execFile(__dirname+'/sendmessage_single.AppleScript', [[to], message, FULL_KEYBOARD_ACCESS], function(err, result) {
 			if (err) {
 				throw err;
 			}
