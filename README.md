@@ -8,12 +8,13 @@
 
 ## How to run on your Mac:
 Firstly, at the very minimum, you will have to enable assistive access to Terminal.app or iTerm2. If you want to run this over ssh, you will also need to enable access to sshd-keygen-wrapper. Next:
-> git clone https://github.com/CamHenlin/imessageclient.git
->
-> cd imessageclient
->
-> node app
->
+```bash
+git clone https://github.com/CamHenlin/imessageclient.git
+
+cd imessageclient
+
+node app
+```
 
 ## How to use:
 - After starting, you should see your existing conversations on the right. Select one by pressing the up and down arrows, then press enter to load the conversation.
