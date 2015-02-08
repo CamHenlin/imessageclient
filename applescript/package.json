@@ -1,0 +1,41 @@
+{
+  "name": "applescript",
+  "description": "Easily execute arbitrary AppleScript code on OS X through NodeJS.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Nathan Rajlich",
+    "email": "nathan@tootallnate.net"
+  },
+  "keywords": [
+    "applescript",
+    "mac",
+    "osx"
+  ],
+  "main": "./lib/applescript",
+  "gitHead": "24c5b54cdff11a520b9c174584aca688393f7eca",
+  "_id": "applescript@1.0.0",
+  "scripts": {},
+  "_shasum": "bb87af568cad034a4e48c4bdaf6067a3a2701317",
+  "_from": "applescript@*",
+  "_npmVersion": "1.4.28",
+  "_npmUser": {
+    "name": "tootallnate",
+    "email": "nathan@tootallnate.net"
+  },
+  "maintainers": [
+    {
+      "name": "TooTallNate",
+      "email": "nathan@tootallnate.net"
+    },
+    {
+      "name": "tootallnate",
+      "email": "nathan@tootallnate.net"
+    }
+  ],
+  "dist": {
+    "shasum": "bb87af568cad034a4e48c4bdaf6067a3a2701317",
+    "tarball": "http://registry.npmjs.org/applescript/-/applescript-1.0.0.tgz"
+  },
+  "directories": {},
+  "_resolved": "https://registry.npmjs.org/applescript/-/applescript-1.0.0.tgz"
+}

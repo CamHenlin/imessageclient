@@ -13,6 +13,8 @@ git clone https://github.com/CamHenlin/imessageclient.git
 
 cd imessageclient
 
+npm install
+
 node app
 ```
 
