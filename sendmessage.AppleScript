@@ -2,7 +2,7 @@ on run argv
 	-- no activate
 	tell application "System Events"
 		tell process "Messages"
-			tell menu item "New Message" of menu "file" of menu bar 1
+			tell menu item 1 of menu 3 of menu bar 1
 				click
 			end tell
 			delay 0.1
