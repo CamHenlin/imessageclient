@@ -1,5 +1,5 @@
 {
-  "name": "imessageninja_fullclient",
+  "name": "imessageclient",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
@@ -9,7 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "applescript": "^1.0.0",
     "beepbeep": "^1.2.0",
     "blessed": "0.0.43",
     "exec": "^0.1.3",

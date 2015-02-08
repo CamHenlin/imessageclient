@@ -51,7 +51,6 @@ var SELECTED_CHATTER = "";
 var MY_APPLE_ID = "";
 var sending = false;
 
-
 // blessed code
 var chatList = blessed.list({
 	parent: screen,
@@ -86,7 +85,7 @@ var selectedChatBox = blessed.box({
 	content: ""
 });
 
-var inputBox = blessed.textarea({
+var inputBox = blessed.textbox({
 	parent: screen,
 	// Possibly support:
 	// align: 'center',
@@ -212,20 +211,29 @@ screen.key('n', function(ch, key) {
 	screen.render();
 })
 
-inputBox.on('focus', function() {
+var inputBoxFocusHandler = function() {
 	inputBox.readInput(function(data) {});
 
 	inputBox.key('enter', function(ch, key) {
+		if (SELECTED_CHATTER === "") {
+			return;
+		}
+
 		var message = inputBox.getValue();
 		sendMessage(selectedChatBox.content, message);
 		inputBox.setValue("");
+		inputBox.unkey('enter');
+
+		inputBoxFocusHandler();
 	});
 
 	inputBox.key('tab', function(ch, key) {
 		inputBox.unkey('enter');
 		chatList.focus();
 	});
-});
+};
+
+inputBox.on('focus', inputBoxFocusHandler);
 
 chatList.on('select', function(data) {
 	selectedChatBox.setContent(chatList.getItem(data.index-2).content);
@@ -325,7 +333,6 @@ function sendMessage(to, message) {
 			sending = false;
 		}.bind(this));
 	}
-
 }
 
 setInterval(function() {
