@@ -25,6 +25,7 @@ node app
 - In the text entry field, if you press tab, you will be brought back to the conversation selection list so you can select another conversation.
 - When you are selecting conversation, you can press the Q key to quit
 - To start a new conversation, press the N key while the message list is selected. To cancel, press escape.
+- You can toggle other services that you might have enabled in your Messages client by hitting the R button with the contact list selected
 
 ## This is clunky!
 It seems to me that there is a way to access private APIs within OS X to send messages without the use of Messages.app, but I haven't figured out how to do so yet. Maybe you can help out and contribute?

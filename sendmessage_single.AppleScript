@@ -8,6 +8,9 @@ on run argv
 			delay 0.1
 			keystroke item 1 of argv
 			delay 0.1
+			if item 4 of argv = "true" then
+				delay 1.6
+			end if
 			keystroke return
 			delay 0.1
 			keystroke tab

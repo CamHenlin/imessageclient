@@ -49,6 +49,7 @@ var LAST_SEEN_CHAT_ID = 0;
 var ID_MISMATCH = false;
 var SELECTED_CHATTER = "";
 var MY_APPLE_ID = "";
+var ENABLE_OTHER_SERVICES = false;
 var sending = false;
 
 // blessed code
@@ -158,6 +159,17 @@ screen.key('tab', function(ch, key) {
 	screen.render();
 });
 
+screen.key('r', function(ch, key) {
+	if (ENABLE_OTHER_SERVICES) {
+		ENABLE_OTHER_SERVICES = false;
+	} else {
+		ENABLE_OTHER_SERVICES = true;
+	}
+
+	getChats();
+	screen.render();
+});
+
 screen.key(',', function(ch, key) {
 	outputBox.up();
 	screen.render();
@@ -254,6 +266,11 @@ function getChats() {
 		if (OLD_OSX) {
 			SQL = "SELECT DISTINCT message.date, handle.id, chat.chat_identifier FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.is_from_me = 0 AND message.service = 'iMessage' ORDER BY message.date DESC";
 		}
+
+		if (ENABLE_OTHER_SERVICES) {
+			SQL = SQL.replace("AND message.service = 'iMessage'", "");
+		}
+
 		db.all(SQL, function(err, rows) {
 			if (err) throw err;
 			for (var i = 0; i < rows.length; i++) {
@@ -290,6 +307,10 @@ function getAllMessagesInCurrentChat() {
 		SQL = "SELECT DISTINCT message.ROWID, handle.id, message.text, message.is_from_me, message.date, message.date_delivered, message.date_read FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.service = 'iMessage' AND handle.id = '"+SELECTED_CHATTER+"' ORDER BY message.date DESC LIMIT 500";
 	}
 
+	if (ENABLE_OTHER_SERVICES) {
+		SQL = SQL.replace("message.service = 'iMessage' AND ", "");
+	}
+
 	db.serialize(function() {
 		var arr = [];
 		db.all(SQL, function(err, rows) {
@@ -324,7 +345,7 @@ function sendMessage(to, message) {
 			sending = false;
 		}.bind(this));
 	} else {
-		applescript.execFile(__dirname+'/sendmessage_single.AppleScript', [[to], message, FULL_KEYBOARD_ACCESS], function(err, result) {
+		applescript.execFile(__dirname+'/sendmessage_single.AppleScript', [[to], message, FULL_KEYBOARD_ACCESS, ENABLE_OTHER_SERVICES], function(err, result) {
 			if (err) {
 				throw err;
 			}
