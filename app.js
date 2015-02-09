@@ -60,7 +60,7 @@ var chatList = blessed.list({
 	top: '0',
 	right: '0',
 	align: 'center',
-	fg: 'red',
+	fg: 'cyan',
 	label: 'Conversations',
 	border: {
 		type: 'line'
@@ -78,7 +78,7 @@ var selectedChatBox = blessed.box({
 	parent: screen,
 	// Possibly support:
 	align: 'center',
-	fg: 'red',
+	fg: 'cyan',
 	height: '5%',
 	width: '75%',
 	top: '0',
@@ -90,7 +90,7 @@ var inputBox = blessed.textbox({
 	parent: screen,
 	// Possibly support:
 	// align: 'center',
-	fg: 'red',
+	fg: 'cyan',
 	height: '15%',
 	label: 'iMessage',
 	border: {
@@ -105,7 +105,7 @@ var outputBox = blessed.list({
 	parent: screen,
 	// Possibly support:
 	// align: 'center',
-	fg: 'red',
+	fg: 'cyan',
 	height: '82%',
 	border: {
 		type: 'line'
