@@ -149,6 +149,16 @@ screen.key('q', function(ch, key) {
 	return process.exit(0);
 });
 
+screen.key('e', function(ch, key) {
+	applescript.execFile(__dirname+'/send_return.AppleScript', [], function(err, result) {
+		if (err) {
+			throw err;
+		}
+
+		screen.render();
+	});
+});
+
 screen.key('tab', function(ch, key) {
 	if (chatList.focused) {
 		inputBox.focus();
