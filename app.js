@@ -6,6 +6,7 @@ var blessed = require("blessed");
 var beep = require('beepbeep');
 var applescript = require("./applescript/lib/applescript.js");
 var exec = require('exec');
+var glob = require('glob');
 
 var exists = fs.existsSync(file);
 if (exists) {
@@ -47,7 +48,10 @@ screen.title = 'iMessages';
 var LAST_SEEN_ID = 0;
 var LAST_SEEN_CHAT_ID = 0;
 var ID_MISMATCH = false;
-var SELECTED_CHATTER = "";
+var SELECTED_CHATTER = ""; // could be phone number or email address or groupchat id
+var SELECTED_CHATTER_NAME = ""; // should be a firstname and lastname if selected chatter exists in addressbook
+var GROUPCHAT_SELECTED = false;
+var SELECTED_GROUP = ""; // stores actual group title
 var MY_APPLE_ID = "";
 var ENABLE_OTHER_SERVICES = false;
 var sending = false;
@@ -145,10 +149,12 @@ outputBox.on('wheelup', function() {
 // Select the first item.
 chatList.select(0);
 
+// q button quits
 screen.key('q', function(ch, key) {
 	return process.exit(0);
 });
 
+// e button sends enter to Messages.app
 screen.key('e', function(ch, key) {
 	applescript.execFile(__dirname+'/send_return.AppleScript', [], function(err, result) {
 		if (err) {
@@ -159,6 +165,7 @@ screen.key('e', function(ch, key) {
 	});
 });
 
+// tab button switches focus
 screen.key('tab', function(ch, key) {
 	if (chatList.focused) {
 		inputBox.focus();
@@ -169,6 +176,7 @@ screen.key('tab', function(ch, key) {
 	screen.render();
 });
 
+// r button enables other services
 screen.key('r', function(ch, key) {
 	if (ENABLE_OTHER_SERVICES) {
 		ENABLE_OTHER_SERVICES = false;
@@ -180,16 +188,19 @@ screen.key('r', function(ch, key) {
 	screen.render();
 });
 
+// not 100% sure why this doesnt work, should scroll up conversation
 screen.key(',', function(ch, key) {
 	outputBox.up();
 	screen.render();
 });
 
+// not 100% sure why this doesnt work, should scroll down conversation
 screen.key('.', function(ch, key) {
 	outputBox.down();
 	screen.render();
 });
 
+// n creates a new conversation
 screen.key('n', function(ch, key) {
 	var newChatBox = blessed.textarea({
 		parent: screen,
@@ -233,6 +244,7 @@ screen.key('n', function(ch, key) {
 	screen.render();
 })
 
+// handler for input textbox focus
 var inputBoxFocusHandler = function() {
 	inputBox.readInput(function(data) {});
 
@@ -242,7 +254,7 @@ var inputBoxFocusHandler = function() {
 		}
 
 		var message = inputBox.getValue();
-		sendMessage(selectedChatBox.content, message);
+		sendMessage(SELECTED_CHATTER, message);
 		inputBox.setValue("");
 		inputBox.unkey('enter');
 
@@ -257,17 +269,84 @@ var inputBoxFocusHandler = function() {
 
 inputBox.on('focus', inputBoxFocusHandler);
 
+// handler for when a conversation is selected
 chatList.on('select', function(data) {
-	selectedChatBox.setContent(chatList.getItem(data.index-2).content);
+	// we don't want to try to get the name of groupchats
+	if (chatList.getItem(data.index-2).content.indexOf('-chat') > -1) {
+		GROUPCHAT_SELECTED = true;
+		// so group chats can be whatever the selection was
+		selectedChatBox.setContent(chatList.getItem(data.index-2).content);
+	} else {
+		GROUPCHAT_SELECTED = false;
+		if (!isNaN(parseInt(chatList.getItem(data.index-2).content))) { // we only want numbers, this is an ok way to filter them. emails for other services or icloud accounts will break this for now
+			getNameFromPhone(chatList.getItem(data.index-2).content, function (name) {
+				if (name && name !== "Undefined ") { // "Undefined " can happen on the case of there being a contact with no first or lastname, but a phone number and some other contact info
+					selectedChatBox.setContent(name);
+				} else {
+					selectedChatBox.setContent(chatList.getItem(data.index-2).content);
+				}
+
+				screen.render();
+			});
+		} else {			// so group chats can be whatever the selection was
+			selectedChatBox.setContent(chatList.getItem(data.index-2).content);
+		}
+	}
+
+
 	SELECTED_CHATTER = chatList.getItem(data.index-2).content;
 
 	// handle special case for chats:
 	if (SELECTED_CHATTER.indexOf('-chat') > -1) {
+		SELECTED_GROUP = SELECTED_CHATTER;
 		SELECTED_CHATTER = 'chat'+SELECTED_CHATTER.split('-chat')[1];
 	}
 	getAllMessagesInCurrentChat();
 	screen.render();
 });
+
+function getNameFromPhone(phone, callback) {
+	phone = phone.replace(/\(/g,'').replace(/\)/g,'').replace(/\-/g,'').replace(/\ /g,'').replace(/\+/g,'');
+	// need to make a like statement so we can get the following phone, which is now in the format
+	// 11231231234 into 1%123%123%1234
+	// NOTE: this will probably not work for other countries since I assume they store their address differently?
+	// fall back to phone number for that case for now
+	// 1%
+	phone = phone.substr(0, 1) + '%' + phone.substr(1);
+	// 1%123
+	phone = phone.substr(0, 5) + '%' + phone.substr(5);
+	// 1%123%123
+	phone = phone.substr(0, 9) + '%' + phone.substr(9);
+	// comment out if you want to debug for another locality:
+	// throw new Error(phone);
+
+	glob(process.env.HOME + '/Library/Application\ Support/AddressBook/**/AddressBook-v22.abcddb', function (er, files) {
+		var found = false;
+
+		for (var i = 0; i < files.length; i++) {
+			var file = files[i];
+			var db = new sqlite3.Database(file);
+
+			db.serialize(function() {
+				var SQL = 'SELECT * FROM ZABCDCONTACTINDEX LEFT OUTER JOIN ZABCDPHONENUMBER ON ZABCDCONTACTINDEX.ZCONTACT = ZABCDPHONENUMBER.ZOWNER LEFT OUTER JOIN ZABCDEMAILADDRESS ON ZABCDEMAILADDRESS.ZOWNER = ZABCDCONTACTINDEX.ZCONTACT LEFT OUTER JOIN ZABCDMESSAGINGADDRESS ON ZABCDMESSAGINGADDRESS.ZOWNER = ZABCDCONTACTINDEX.ZCONTACT LEFT OUTER JOIN ZABCDRECORD ON ZABCDRECORD.Z_PK = ZABCDCONTACTINDEX.ZCONTACT WHERE ZFULLNUMBER LIKE "%'+phone+'%"';
+				db.all(SQL, function(err, rows) {
+					if (rows.length > 0) {
+						found = true;
+						callback(rows[0].ZFIRSTNAME + ' ' + ((rows[0].ZLASTNAME) ? rows[0].ZLASTNAME : ""));
+					}
+				});
+			});
+		}
+
+		setTimeout(function() {
+			if (found) {
+				return;
+			} else {
+				callback();
+			}
+		}, 250);
+	});
+}
 
 function getChats() {
 	db.serialize(function() {
@@ -311,7 +390,7 @@ function getChats() {
 
 function getAllMessagesInCurrentChat() {
 	var SQL = "";
-	if (SELECTED_CHATTER.indexOf('chat') > -1) { // this is a group chat
+	if (GROUPCHAT_SELECTED) { // this is a group chat
 		SQL = "SELECT DISTINCT message.ROWID, handle.id, message.text, message.is_from_me, message.date, message.date_delivered, message.date_read FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.service = 'iMessage' AND chat.chat_identifier = '"+SELECTED_CHATTER+"' ORDER BY message.date DESC LIMIT 500";
 	} else { // this is one person
 		SQL = "SELECT DISTINCT message.ROWID, handle.id, message.text, message.is_from_me, message.date, message.date_delivered, message.date_read FROM message LEFT OUTER JOIN chat ON chat.room_name = message.cache_roomnames LEFT OUTER JOIN handle ON handle.ROWID = message.handle_id WHERE message.service = 'iMessage' AND handle.id = '"+SELECTED_CHATTER+"' ORDER BY message.date DESC LIMIT 500";
@@ -345,8 +424,8 @@ function sendMessage(to, message) {
 	if (sending) { return; }
 	sending = true;
 
-	if (to.indexOf('chat') > -1) {
-		applescript.execFile(__dirname+'/sendmessage.AppleScript', [[to.split('-chat')[0]], message, FULL_KEYBOARD_ACCESS], function(err, result) {
+	if (GROUPCHAT_SELECTED) {
+		applescript.execFile(__dirname+'/sendmessage.AppleScript', [[SELECTED_GROUP.split('-chat')[0]], message, FULL_KEYBOARD_ACCESS], function(err, result) {
 			if (err) {
 				throw err;
 			}
