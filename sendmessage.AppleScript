@@ -7,7 +7,7 @@ on run argv
 			end tell
 			delay 0.1
 			keystroke item 1 of argv
-			delay 2.2
+			delay 2.6
 			key code 125
 			keystroke return
 			delay 0.1
