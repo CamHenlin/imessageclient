@@ -29,7 +29,10 @@ node app
 - Press E button with contacts list highlighted to send an enter command to Messages.app, useful if it looks like your messages aren't being sent and you're running over ssh, clears most Messages.app dialogs and errors
 
 ## This is clunky!
-It seems to me that there is a way to access private APIs within OS X to send messages without the use of Messages.app, but I haven't figured out how to do so yet. Maybe you can help out and contribute?
+It seems to me that there is a way to access private APIs within OS X to send messages without the use of Messages.app, but I haven't figured out how to do so yet. Maybe you can help out and contribute? You can make this less clunky by helping out with this project [nodeprivatemessageskit](https://github.com/camhenlin/nodeprivatemessageskit)
 
 ## Why did you make this?
 Why not?
+
+
+Sister project is available at: [iMessageWebClient](https://github.com/CamHenlin/iMessageWebClient)
