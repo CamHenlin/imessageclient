@@ -36,3 +36,5 @@ Why not?
 
 
 Sister project is available at: [iMessageWebClient](https://github.com/CamHenlin/iMessageWebClient)
+
+![made with a mac](http://henlin.org/mac.gif "made with a mac")
