@@ -1,6 +1,7 @@
 # terminal-based iMessage client for Mac OS X
 
 note: if you would like a web-based iMessage client, check out [iMessageWebClient](https://github.com/CamHenlin/iMessageWebClient)
+or if you would like to run an iMessage bot, check out [iMessageBot](https://github.com/CamHenlin/imessagebot)
 
 ![iMessage client screenshot](https://github.com/CamHenlin/imessageclient/raw/master/screenshot.png "screenshot of the iMessage client in action")
 
