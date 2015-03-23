@@ -1,6 +1,6 @@
 on run argv
-	tell Application "Messages" to activate
 	tell application "System Events"
+		tell Application "Messages" to activate
 		tell process "Messages"
 			tell menu item 1 of menu 3 of menu bar 1
 				click
