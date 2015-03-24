@@ -21,8 +21,12 @@ on run argv
 			set value of text area 1 of scroll area 4 of splitter group 1 of window 1 to item 2 of argv
 			delay 0.1
 			keystroke return
-			set visible to false
+			delay 0.1
+			-- set visible to false
 		end tell
+		key down command
+		keystroke tab
+		key up command
 	end tell
-end run
 
+end run
