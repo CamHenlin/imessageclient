@@ -37,6 +37,28 @@ exec('defaults read NSGlobalDomain AppleKeyboardUIMode', function(err, out, code
 	}
 });
 
+// make sure assistive access is set up
+function assistiveAccessCheck() {
+	try {
+		// first check if assistive access is turned on
+		applescript.execFile(__dirname+'/assistive.AppleScript', function(err, result) {
+			if (err) {
+				throw err;
+			}
+		});
+	} catch (error) {
+		// if not, prompt the user to turn it on
+		try {
+			applescript.execFile(__dirname+'/assistive.AppleScript', [false], function(err, result) {});
+		} catch (error) {
+			// I believe this might happen with old versions of OS X
+			console.log('if you are seeing this text, please file an issue at https://github.com/CamHenlin/imessageclient/issues including your OS X version number and any problems you are encountering.')
+		}
+	}
+};
+
+(assistiveAccessCheck)();
+
 // read the Messages.app sqlite db
 var db = new sqlite3.Database(file);
 
@@ -412,6 +434,7 @@ function getAllMessagesInCurrentChat() {
 					MY_APPLE_ID = row.id;
 				}
 			}
+
 			outputBox.setItems(arr.reverse());
 			outputBox.select(rows.length);
 
@@ -427,7 +450,7 @@ function sendMessage(to, message) {
 	if (GROUPCHAT_SELECTED) {
 		applescript.execFile(__dirname+'/sendmessage.AppleScript', [[SELECTED_GROUP.split('-chat')[0]], message, FULL_KEYBOARD_ACCESS], function(err, result) {
 			if (err) {
-				throw err;
+				assistiveAccessCheck();
 			}
 
 			screen.render();
@@ -436,7 +459,7 @@ function sendMessage(to, message) {
 	} else {
 		applescript.execFile(__dirname+'/sendmessage_single.AppleScript', [[to], message, FULL_KEYBOARD_ACCESS, ENABLE_OTHER_SERVICES], function(err, result) {
 			if (err) {
-				throw err;
+				assistiveAccessCheck();
 			}
 
 			screen.render();
