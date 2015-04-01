@@ -8,6 +8,12 @@ var applescript = require("./applescript/lib/applescript.js");
 var exec = require('exec');
 var glob = require('glob');
 
+// blessed elements
+var chatList;
+var selectedChatBox;
+var inputBox;
+var outputBox;
+
 var exists = fs.existsSync(file);
 if (exists) {
 	console.log("we have a file to monitor!");
@@ -39,25 +45,20 @@ exec('defaults read NSGlobalDomain AppleKeyboardUIMode', function(err, out, code
 
 // make sure assistive access is set up
 function assistiveAccessCheck() {
-	try {
-		// first check if assistive access is turned on
-		applescript.execFile(__dirname+'/assistive.AppleScript', function(err, result) {
-			if (err) {
-				throw err;
+	// first check if assistive access is turned on
+	applescript.execFile(__dirname+'/assistive.AppleScript', [true], function(err, result) {
+		if (err) {
+			try {
+				outputBox.setItems(["This program requires OS X Assistive Access, which is currently disabled.", "Opening Assistive Access now... (You may be asked to enter your password.)", "note: to run locally, enable access to Terminal, to run over SSH, enable access to sshd_keygen_wrapper."]);
+				screen.render();
+				applescript.execFile(__dirname+'/assistive.AppleScript', [false], function(err, result) {});
+			} catch (error) {
+				// I believe this might happen with old versions of OS X
+				console.log('if you are seeing this text, please file an issue at https://github.com/CamHenlin/imessageclient/issues including your OS X version number and any problems you are encountering.')
 			}
-		});
-	} catch (error) {
-		// if not, prompt the user to turn it on
-		try {
-			applescript.execFile(__dirname+'/assistive.AppleScript', [false], function(err, result) {});
-		} catch (error) {
-			// I believe this might happen with old versions of OS X
-			console.log('if you are seeing this text, please file an issue at https://github.com/CamHenlin/imessageclient/issues including your OS X version number and any problems you are encountering.')
 		}
-	}
+	});
 };
-
-(assistiveAccessCheck)();
 
 // read the Messages.app sqlite db
 var db = new sqlite3.Database(file);
@@ -77,9 +78,10 @@ var SELECTED_GROUP = ""; // stores actual group title
 var MY_APPLE_ID = "";
 var ENABLE_OTHER_SERVICES = false;
 var sending = false;
+var chatSet = false;
 
 // blessed code
-var chatList = blessed.list({
+chatList = blessed.list({
 	parent: screen,
 	width: '25%',
 	height: '100%',
@@ -100,7 +102,7 @@ var chatList = blessed.list({
 	keys: true
 });
 
-var selectedChatBox = blessed.box({
+selectedChatBox = blessed.box({
 	parent: screen,
 	// Possibly support:
 	align: 'center',
@@ -112,7 +114,7 @@ var selectedChatBox = blessed.box({
 	content: ""
 });
 
-var inputBox = blessed.textbox({
+inputBox = blessed.textbox({
 	parent: screen,
 	// Possibly support:
 	// align: 'center',
@@ -127,7 +129,7 @@ var inputBox = blessed.textbox({
 	left: '0'
 });
 
-var outputBox = blessed.list({
+outputBox = blessed.list({
 	parent: screen,
 	// Possibly support:
 	// align: 'center',
@@ -147,8 +149,12 @@ var outputBox = blessed.list({
 	keys: true
 });
 
+
 // load initial chats list
 getChats();
+
+// make sure we have assistive access enabled
+assistiveAccessCheck();
 
 // Allow scrolling with the mousewheel (manually).
 
@@ -168,9 +174,6 @@ outputBox.on('wheelup', function() {
 	outputBox.up();
 });
 
-// Select the first item.
-chatList.select(0);
-
 // q button quits
 screen.key('q', function(ch, key) {
 	return process.exit(0);
@@ -178,7 +181,7 @@ screen.key('q', function(ch, key) {
 
 // e button sends enter to Messages.app
 screen.key('e', function(ch, key) {
-	applescript.execFile(__dirname+'/send_return.AppleScript', [], function(err, result) {
+	applescript.execFile(__dirname + '/send_return.AppleScript', [], function(err, result) {
 		if (err) {
 			throw err;
 		}
@@ -293,6 +296,7 @@ inputBox.on('focus', inputBoxFocusHandler);
 
 // handler for when a conversation is selected
 chatList.on('select', function(data) {
+	chatSet = true;
 	// we don't want to try to get the name of groupchats
 	if (chatList.getItem(data.index-2).content.indexOf('-chat') > -1) {
 		GROUPCHAT_SELECTED = true;
@@ -469,19 +473,24 @@ function sendMessage(to, message) {
 }
 
 setInterval(function() {
-	db.serialize(function() {
-		db.all("SELECT MAX(ROWID) AS max FROM message", function(err, rows) {
-			if (rows) {
-				var max = rows[0].max;
-				if (max > LAST_SEEN_ID) {
-					LAST_SEEN_ID = max;
-					// console.log('new message! update clients!');
-					var ID_MISMATCH = true;
-					// beep();
-					getChats();
-					getAllMessagesInCurrentChat();
+	// don't do anything until the user has selected a chat
+	if (chatSet) {
+		db.serialize(function() {
+			db.all("SELECT MAX(ROWID) AS max FROM message", function(err, rows) {
+				if (rows) {
+					var max = rows[0].max;
+					if (max > LAST_SEEN_ID) {
+						LAST_SEEN_ID = max;
+						// console.log('new message! update clients!');
+						var ID_MISMATCH = true;
+						// beep();
+						getChats();
+						getAllMessagesInCurrentChat();
+					}
 				}
-			}
+			}.bind(this));
 		}.bind(this));
-	}.bind(this));
+	}
 }, 250);
+
+

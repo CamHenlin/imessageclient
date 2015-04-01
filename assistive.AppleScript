@@ -1,6 +1,13 @@
 on run argv
-	if item 1 of argv = "true" then -- extra tab for "full keyboard access"
-		tell Application "Messages" to activate
+	if item 1 of argv = "true" then
+		tell application "System Events"
+			tell process "Messages"
+				tell menu bar 1
+					click
+				end tell
+			end tell
+		end tell
+		return
 	end if
 	tell application "System Events" to if not UI elements enabled then
 		tell me
