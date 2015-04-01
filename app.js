@@ -49,7 +49,7 @@ function assistiveAccessCheck() {
 	applescript.execFile(__dirname+'/assistive.AppleScript', [true], function(err, result) {
 		if (err) {
 			try {
-				outputBox.setItems(["This program requires OS X Assistive Access, which is currently disabled.", "Opening Assistive Access now... (You may be asked to enter your password.)", "note: to run locally, enable access to Terminal, to run over SSH, enable access to sshd_keygen_wrapper."]);
+				outputBox.setItems(["This program requires OS X Assistive Access, which is currently disabled.", "Opening Assistive Access now... (You may be asked to enter your password.)", "note: to run locally, enable access to Terminal or iTerm2, to run over SSH, enable access to sshd_keygen_wrapper."]);
 				screen.render();
 				applescript.execFile(__dirname+'/assistive.AppleScript', [false], function(err, result) {});
 			} catch (error) {
