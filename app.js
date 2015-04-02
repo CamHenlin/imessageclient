@@ -19,7 +19,7 @@ if (!exists) {
 	setTimeout(function() {
 		outputBox.setItems(["Looks like there was a problem opening Messages.app's SQLite database.", "Open an issue at https://github.com/CamHenlin/imessageclient/issues"]);
 		screen.render();
-	}, 250)
+	}, 250);
 }
 
 // discover if we are running and old version of OS X or not
