@@ -15,10 +15,11 @@ var inputBox;
 var outputBox;
 
 var exists = fs.existsSync(file);
-if (exists) {
-	console.log("we have a file to monitor!");
-} else {
-	console.log("no dice!");
+if (!exists) {
+	setTimeout(function() {
+		outputBox.setItems(["Looks like there was a problem opening Messages.app's SQLite database.", "Open an issue at https://github.com/CamHenlin/imessageclient/issues"]);
+		screen.render();
+	}, 250)
 }
 
 // discover if we are running and old version of OS X or not
