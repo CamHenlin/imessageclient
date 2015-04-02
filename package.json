@@ -10,7 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "beepbeep": "^1.2.0",
     "blessed": "0.0.43",
     "exec": "^0.1.3",
     "glob": "^4.3.5",

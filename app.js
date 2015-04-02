@@ -3,7 +3,6 @@ var fs = require("fs");
 var dir = process.env.HOME + '/Library/Messages/';
 var file = process.env.HOME + '/Library/Messages/chat.db';
 var blessed = require("blessed");
-var beep = require('beepbeep');
 var applescript = require("./applescript/lib/applescript.js");
 var exec = require('exec');
 var glob = require('glob');
@@ -484,7 +483,6 @@ setInterval(function() {
 						LAST_SEEN_ID = max;
 						// console.log('new message! update clients!');
 						var ID_MISMATCH = true;
-						// beep();
 						getChats();
 						getAllMessagesInCurrentChat();
 					}
