@@ -6,6 +6,7 @@ var blessed = require("blessed");
 var applescript = require("./applescript/lib/applescript.js");
 var exec = require('exec');
 var glob = require('glob');
+var imessagemodule = require("iMessageModule");
 
 // blessed elements
 var chatList;
@@ -452,23 +453,9 @@ function sendMessage(to, message) {
 	sending = true;
 
 	if (GROUPCHAT_SELECTED) {
-		applescript.execFile(__dirname+'/sendmessage.AppleScript', [[SELECTED_GROUP.split('-chat')[0]], message, FULL_KEYBOARD_ACCESS], function(err, result) {
-			if (err) {
-				assistiveAccessCheck();
-			}
-
-			screen.render();
-			sending = false;
-		}.bind(this));
+		imessagemodule.sendMessage(SELECTED_GROUP.split('-chat')[0], message);
 	} else {
-		applescript.execFile(__dirname+'/sendmessage_single.AppleScript', [[to], message, FULL_KEYBOARD_ACCESS, ENABLE_OTHER_SERVICES], function(err, result) {
-			if (err) {
-				assistiveAccessCheck();
-			}
-
-			screen.render();
-			sending = false;
-		}.bind(this));
+		imessagemodule.sendMessage(to, message);
 	}
 }
 
