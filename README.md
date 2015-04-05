@@ -40,4 +40,6 @@ Why not?
 
 Sister project is available at: [iMessageWebClient](https://github.com/CamHenlin/iMessageWebClient)
 
+Uses [iMessageModule](https://github.com/CamHenlin/iMessageModule).
+
 ![made with a mac](http://henlin.org/mac.gif "made with a mac")
