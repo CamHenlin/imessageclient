@@ -13,7 +13,7 @@
     "blessed": "0.0.43",
     "exec": "^0.1.3",
     "glob": "^4.3.5",
-    "iMessageModule": "0.0.4",
+    "imessagemodule": "0.1.3",
     "sqlite3": "^3.0.4"
   }
 }

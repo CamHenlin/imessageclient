@@ -6,7 +6,7 @@ var blessed = require("blessed");
 var applescript = require("./applescript/lib/applescript.js");
 var exec = require('exec');
 var glob = require('glob');
-var imessagemodule = require("iMessageModule");
+var imessagemodule = require("imessagemodule");
 
 // blessed elements
 var chatList;
