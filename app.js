@@ -103,6 +103,7 @@ chatList = blessed.list({
 	keys: true
 });
 
+// box on right with list of open chats
 selectedChatBox = blessed.box({
 	parent: screen,
 	// Possibly support:
@@ -115,6 +116,7 @@ selectedChatBox = blessed.box({
 	content: ""
 });
 
+// box at bottom for chat input
 inputBox = blessed.textbox({
 	parent: screen,
 	// Possibly support:
@@ -130,6 +132,7 @@ inputBox = blessed.textbox({
 	left: '0'
 });
 
+// main chat box
 outputBox = blessed.list({
 	parent: screen,
 	// Possibly support:
