@@ -161,7 +161,6 @@ getChats();
 assistiveAccessCheck();
 
 // Allow scrolling with the mousewheel (manually).
-
 chatList.on('wheeldown', function() {
 	chatList.down();
 });
@@ -295,7 +294,6 @@ var inputBoxFocusHandler = function() {
 		chatList.focus();
 	});
 };
-
 inputBox.on('focus', inputBoxFocusHandler);
 
 // handler for when a conversation is selected
