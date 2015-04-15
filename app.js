@@ -119,8 +119,6 @@ selectedChatBox = blessed.box({
 // box at bottom for chat input
 inputBox = blessed.textbox({
 	parent: screen,
-	// Possibly support:
-	// align: 'center',
 	fg: 'cyan',
 	height: '15%',
 	label: 'iMessage',
@@ -135,8 +133,6 @@ inputBox = blessed.textbox({
 // main chat box
 outputBox = blessed.list({
 	parent: screen,
-	// Possibly support:
-	// align: 'center',
 	fg: 'cyan',
 	height: '82%',
 	border: {
