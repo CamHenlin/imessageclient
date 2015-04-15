@@ -22,7 +22,7 @@ if (!exists) {
 	}, 250);
 }
 
-// discover if we are running and old version of OS X or not
+// discover if we are running an old version of OS X or not
 var OLD_OSX = false;
 var os = require('os');
 if (os.release().split('.')[0] === "12") { // 12 is 10.8 Mountain Lion, which does not have named group chats
