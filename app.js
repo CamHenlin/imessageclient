@@ -465,7 +465,6 @@ setInterval(function() {
 					var max = rows[0].max;
 					if (max > LAST_SEEN_ID) {
 						LAST_SEEN_ID = max;
-						// console.log('new message! update clients!');
 						var ID_MISMATCH = true;
 						getChats();
 						getAllMessagesInCurrentChat();
