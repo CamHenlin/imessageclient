@@ -454,6 +454,7 @@ function sendMessage(to, message) {
 	} else {
 		imessagemodule.sendMessage(to, message);
 	}
+	sending = false;
 }
 
 setInterval(function() {
