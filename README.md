@@ -1,8 +1,5 @@
 # terminal-based iMessage client for Mac OS X
 
-## note: no longer works in OS X 10.11 for sending iMessages.
-### Apple took away Messages.app UI scripting capabilities in OS X 10.11 to prevent this type of software. You can report this as a bug to Apple at: https://developer.apple.com/bug-reporting/ Alternatively, you can contribute to https://github.com/CamHenlin/iMessageModule and help figure out a way around scripting Messages.app.
-
 note: if you would like a web-based iMessage client, check out [iMessageWebClient](https://github.com/CamHenlin/iMessageWebClient)
 or if you would like to run an iMessage bot, check out [iMessageBot](https://github.com/CamHenlin/imessagebot)
 
